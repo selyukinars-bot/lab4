@@ -1,0 +1,102 @@
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+HTML = """
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Заказ товара</title>
+</head>
+<body>
+
+<h2>Форма заказа товара</h2>
+
+<form method="POST">
+
+    <label>Товар:</label><br>
+    <select name="product">
+        <option value="phone">Смартфон</option>
+        <option value="laptop">Ноутбук</option>
+        <option value="headphones">Наушники</option>
+    </select>
+    <br><br>
+
+    <label>Количество:</label><br>
+    <input type="number" name="quantity" min="1">
+    <br><br>
+
+    <label>Способ доставки:</label><br>
+    <input type="radio" name="delivery" value="courier" checked>
+    Курьер<br>
+
+    <input type="radio" name="delivery" value="pickup">
+    Самовывоз<br>
+
+    <input type="radio" name="delivery" value="post">
+    Почта<br><br>
+
+    <label>Дополнительные услуги:</label><br>
+    <input type="checkbox" name="services" value="gift">
+    Подарочная упаковка<br>
+
+    <input type="checkbox" name="services" value="insurance">
+    Страховка<br>
+
+    <input type="checkbox" name="services" value="express">
+    Срочная доставка<br><br>
+
+    <button type="submit">Заказать</button>
+
+</form>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+{% if success %}
+    <p style="color: green;">{{ success }}</p>
+{% endif %}
+
+</body>
+</html>
+"""
+
+
+@app.route("/", methods=["GET", "POST"])
+def order():
+    error = None
+    success = None
+
+    if request.method == "POST":
+
+        product = request.form.get("product")
+        quantity = request.form.get("quantity")
+        delivery = request.form.get("delivery")
+        services = request.form.getlist("services")
+
+        try:
+            quantity = int(quantity)
+        except (TypeError, ValueError):
+            quantity = 0
+
+        if quantity <= 0:
+            error = "Количество должно быть больше 0."
+        else:
+            success = (
+                f"Заказ принят! Товар: {product}, "
+                f"количество: {quantity}, "
+                f"доставка: {delivery}, "
+                f"услуги: {', '.join(services) if services else 'нет'}."
+            )
+
+    return render_template_string(
+        HTML,
+        error=error,
+        success=success
+    )
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
