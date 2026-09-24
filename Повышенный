@@ -1,0 +1,89 @@
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+HTML = """
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Расчёт доставки</title>
+</head>
+<body>
+
+<h2>Форма расчёта доставки</h2>
+
+<form method="POST">
+
+    <label>Город:</label><br>
+    <input type="text" name="city">
+    <br><br>
+
+    <label>Вес посылки (кг):</label><br>
+    <input type="number" name="weight" step="0.1">
+    <br><br>
+
+    <label>Тип доставки:</label><br>
+    <select name="delivery_type">
+        <option value="Курьерская доставка">Курьерская доставка</option>
+        <option value="Почта">Почта</option>
+        <option value="Самовывоз">Самовывоз</option>
+    </select>
+    <br><br>
+
+    <button type="submit">Рассчитать</button>
+
+</form>
+
+{% if error %}
+    <p style="color: red;">{{ error }}</p>
+{% endif %}
+
+{% if result %}
+    <h3>Данные доставки:</h3>
+    <p><b>Город:</b> {{ city }}</p>
+    <p><b>Вес:</b> {{ weight }} кг</p>
+    <p><b>Тип доставки:</b> {{ delivery_type }}</p>
+{% endif %}
+
+</body>
+</html>
+"""
+
+
+@app.route("/", methods=["GET", "POST"])
+def delivery():
+    error = None
+    result = False
+
+    city = ""
+    weight = ""
+    delivery_type = ""
+
+    if request.method == "POST":
+        city = request.form.get("city", "").strip()
+        weight = request.form.get("weight", "").strip()
+        delivery_type = request.form.get("delivery_type")
+
+        try:
+            weight = float(weight)
+        except ValueError:
+            weight = 0
+
+        if weight <= 0:
+            error = "Вес посылки должен быть больше 0."
+        else:
+            result = True
+
+    return render_template_string(
+        HTML,
+        error=error,
+        result=result,
+        city=city,
+        weight=weight,
+        delivery_type=delivery_type
+    )
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
