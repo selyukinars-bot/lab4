@@ -1,0 +1,67 @@
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+HTML = """
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Обратная связь</title>
+</head>
+<body>
+    <h2>Форма обратной связи</h2>
+
+    <form method="post">
+        <label>Имя:</label><br>
+        <input type="text" name="name"><br><br>
+
+        <label>Тема сообщения:</label><br>
+        <select name="topic">
+            <option value="question">Вопрос</option>
+            <option value="complaint">Жалоба</option>
+            <option value="suggestion">Предложение</option>
+        </select><br><br>
+
+        <label>Текст сообщения:</label><br>
+        <textarea name="message"></textarea><br><br>
+
+        <button type="submit">Отправить</button>
+    </form>
+
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    {% if success %}
+        <p style="color: green;">{{ success }}</p>
+    {% endif %}
+</body>
+</html>
+"""
+
+@app.route("/", methods=["GET", "POST"])
+def feedback():
+    error = None
+    success = None
+
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        message = request.form.get("message", "").strip()
+
+        if not name:
+            error = "Имя не должно быть пустым."
+        elif not message:
+            error = "Текст сообщения не должен быть пустым."
+        else:
+            success = "Сообщение успешно отправлено!"
+
+    return render_template_string(
+        HTML,
+        error=error,
+        success=success
+    )
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
